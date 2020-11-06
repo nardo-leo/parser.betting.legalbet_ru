@@ -20,17 +20,27 @@ def scrap():
 
     # parse every day
     for day in days:
+        koef_list = []
         game_box = day.find('tr', {'class': 'td-row'})
+        koefs = game_box.find_all('td', {'class': 'odd-td'})
+        for koef in koefs:
+            koef_val = koef.find('a', {'class': 'button'}).text.strip('\n')
+            if koef_val == '—':
+                koef_val = ''
+            # slice breaking string
+            koef_list.append(koef_val)
+
         game = game_box.find('a', {'class': 'link'}).find_all('span')
         try:
             # slice to remove "-" symbol
             owner = game[0].text[:-2]
             guest = game[1].text
-            list_of_games.append(f'{owner},{guest}')
+            list_of_games.append(f'{owner},{guest},{koef_list[0]},'\
+                                 f'{koef_list[1]},{koef_list[2]}')
         except Exception:
             pass
 
-    return list_of_games
+    return '\n'.join(list_of_games)
 
 
 print(scrap())
