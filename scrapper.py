@@ -1,5 +1,9 @@
 import requests
+from datetime import datetime
 from bs4 import BeautifulSoup
+
+
+today = datetime.date(datetime.now())
 
 
 def scrap():
@@ -23,7 +27,7 @@ def scrap():
         koef_list = []
 
         # TODO remove \n and name of the day
-        date = day.find('div', {'class': 'heading-3'}).text.strip('\n')
+        date = day.find('div', {'class': 'heading-3'}).text.split('\n')
 
         game_box = day.find('tr', {'class': 'td-row'})
         koefs = game_box.find_all('td', {'class': 'odd-td'})
@@ -39,7 +43,7 @@ def scrap():
             # slice to remove "-" symbol
             owner = game[0].text[:-2]
             guest = game[1].text
-            list_of_games.append(f'{date},{owner},{guest},{koef_list[0]},'
+            list_of_games.append(f'{date[0]},{owner},{guest},{koef_list[0]},'
                                  f'{koef_list[1]},{koef_list[2]}')
         except Exception:
             pass
@@ -47,4 +51,6 @@ def scrap():
     return '\n'.join(list_of_games)
 
 
-print(scrap())
+# write data to file
+with open(f'{today}_legalbet.csv', 'w', encoding='utf-8') as f:
+    f.write(scrap())
