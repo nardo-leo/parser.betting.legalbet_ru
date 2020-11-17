@@ -7,6 +7,8 @@ today = datetime.date(datetime.now())
 
 
 def scrap():
+    # create header
+    header = 'day,team_1,team_2,koeff_1,koeff_2,koeff_3\n'
     # result list
     list_of_games = []
 
@@ -77,7 +79,7 @@ def scrap():
         else:
             pass
 
-    return '\n'.join(list_of_games)
+    return header + '\n'.join(list_of_games)
 
 
 # write data to file
