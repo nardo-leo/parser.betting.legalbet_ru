@@ -24,39 +24,58 @@ def scrap():
 
     # parse every day
     for day in days:
+        # make sport None
+        sport = None
 
-        koef_list = []
+        # find date
         date = day.find('div', {'class': 'heading-3'}).text.split('\n')
-        game_box = day.findAll('tr', {'class': 'td-row'})
 
-        # TODO one more loop for all event per day
-        for game_row in game_box:
+        # find type of game
+        sport_raw = day.find('div', {'class': 'match-sport-type'})
+        sport = sport_raw.find('div', {'class': 'icon'}).text
 
-            game_link = game_row.find('a', {'class': 'link'})
-            try:
-                game = game_link.findAll('span')
-            except Exception:
-                game = ['', '']
-            koef_row = game_row.findAll('td', {'class': 'odd-td'})
+        if sport == 'Футбол':
+            # find target game container in day
+            game_box = day.find('table', {'class': 'matches-tv-table'})
+            # then games
+            games = game_box.findAll('tr', {'class': 'td-row'})
+            # one more loop for all events per day
+            for game in games:
 
-            for koef in koef_row:
-                # find value
+                # find comands names
                 try:
-                    koef_val_raw = koef.find('a', {'class': 'button'}).text
-                    koef_val = koef_val_raw.strip('\n')
+                    game_link = game.find('a', {'class': 'link'})
+                    players = game_link.findAll('span')
                 except Exception:
-                    koef_val = ''
-                koef_list.append(koef_val)
+                    pass
 
-            try:
-                # slice to remove "-" symbol
-                owner = game[0].text[:-2]
-                guest = game[1].text
-                list_of_games.append(f'{date[0]},{owner},{guest},'
-                                     f'{koef_list[0]},{koef_list[1]},'
-                                     f'{koef_list[2]}')
-            except Exception:
-                pass
+                # find koefs
+                koef_list = []
+                koef_row = game.findAll('td', {'class': 'odd-td'})
+
+                for koef in koef_row:
+                    # find value of koefs
+                    try:
+                        koef_val_raw = koef.find('a', {'class': 'button'}).text
+                        koef_val = koef_val_raw.strip('\n')
+                    except Exception:
+                        koef_val = '—'
+
+                    koef_list.append(koef_val)
+
+                try:
+                    # slice to remove "—" symbol
+                    owner = players[0].text[:-2]
+                    guest = players[1].text
+                    list_of_games.append(f'{date[0]},{owner},{guest},'
+                                         f'{koef_list[0]},{koef_list[1]},'
+                                         f'{koef_list[2]}')
+                except Exception:
+                    pass
+
+        # skip non target games
+        else:
+            pass
 
     return '\n'.join(list_of_games)
 
