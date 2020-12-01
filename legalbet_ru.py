@@ -8,14 +8,18 @@ class LegalBetParser:
     def __init__(self, start_url):
         self.start_url = start_url
         self.today = datetime.date(datetime.now())
+        self.filename = f'{self.today}_legalbet.csv'
 
     def _get(self, url: str) -> BeautifulSoup:
         response = requests.get(url)
         return BeautifulSoup(response.text, 'html.parser')
 
+    def get_filename(self):
+        return self.filename
+
     def make_header(self):
         header = 'date,owner,guest,koeff_1,koeff_2,koeff_3\n'
-        with open(f'{self.today}_legalbet.csv', 'w', encoding='utf-8') as file:
+        with open(self.filename, 'w', encoding='utf-8') as file:
             file.write(header)
 
     def run(self):
@@ -68,7 +72,7 @@ class LegalBetParser:
                 yield game_data
 
     def save(self, game_data: dict):
-        with open(f'{self.today}_legalbet.csv', 'a', encoding='utf-8') as file:
+        with open(self.filename, 'a', encoding='utf-8') as file:
             file.write(f"{game_data['date']},{game_data['owner']},\
                        {game_data['guest']},{game_data['koefs'][0]},\
                        {game_data['koefs'][1]},{game_data['koefs'][2]}\n")
