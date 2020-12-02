@@ -29,11 +29,24 @@ class LegalBetParser:
             self.save(event)
 
     def find_sport_type(self, games_day, sport_type: str):
-        sport_raw = games_day.find('div', {'class': 'match-sport-type'})
-        if sport_type == sport_raw.find('div', {'class': 'icon'}).text:
-            games_table = sport_raw.findNext('table')
-            games = games_table.find_all('tr', attrs={'class', 'td-row'})
-            return games
+        sport_type_raws = games_day.find_all('div',
+                                             {'class': 'match-sport-type'})
+        # check every sport raw
+        for sport_type_raw in sport_type_raws:
+            if sport_type_raw.find('div',
+                                   {'class': 'icon'}).text == sport_type:
+                games_table = sport_type_raw.findNext('table')
+                games = []
+                # TODO iterate through matches-tv-tables
+                while True:
+                    # get games
+                    games.append(games_table.find_all('tr', attrs={'class',
+                                                                   'td-row'}))
+                    # FIXME how to go to the next block
+                    games_table = games_table.find_next_sibling()
+                    if games_table.name != 'table':
+                        break
+                return games[0]
 
     def parse(self, soup: BeautifulSoup) -> dict:
         games_days = soup.find_all('div', {'class': 'matches-table-block'})
@@ -45,7 +58,6 @@ class LegalBetParser:
                                          'heading-3'}).text.split('\n')[0]
             games = self.find_sport_type(games_day, 'Футбол')
 
-            # TODO try:
             for game in games:
                 players = game.find('a',
                                     attrs={'class': 'link'}).findAll('span')
@@ -56,7 +68,7 @@ class LegalBetParser:
                     try:
                         koef_val_raw = koef.find('a', {'class': 'button'}).text
                         koef_val = koef_val_raw.strip('\n')
-                    # TODO which exception
+                    # TODO which exception?
                     except Exception:
                         koef_val = '—'
 
