@@ -36,17 +36,19 @@ class LegalBetParser:
             if sport_type_raw.find('div',
                                    {'class': 'icon'}).text == sport_type:
                 games_table = sport_type_raw.findNext('table')
-                games = []
-                # TODO iterate through matches-tv-tables
+                block_games = []
                 while True:
                     # get games
-                    games.append(games_table.find_all('tr', attrs={'class',
+                    block_games.append(games_table.find_all('tr',
+                                                            attrs={'class',
                                                                    'td-row'}))
-                    # FIXME how to go to the next block
                     games_table = games_table.find_next_sibling()
-                    if games_table.name != 'table':
+                    try:
+                        if games_table.name != 'table':
+                            break
+                    except AttributeError:
                         break
-                return games[0]
+                return block_games
 
     def parse(self, soup: BeautifulSoup) -> dict:
         games_days = soup.find_all('div', {'class': 'matches-table-block'})
@@ -56,32 +58,30 @@ class LegalBetParser:
             date = games_day.find('div',
                                   attrs={'class':
                                          'heading-3'}).text.split('\n')[0]
-            games = self.find_sport_type(games_day, 'Футбол')
+            block_games = self.find_sport_type(games_day, 'Футбол')
 
-            for game in games:
-                players = game.find('a',
-                                    attrs={'class': 'link'}).findAll('span')
-                koefs = []
-                koefs_row = game.findAll('td', {'class': 'odd-td'})
+            for games in block_games:
+                for game in games:
+                    players = game.find('a',
+                                        attrs={'class':
+                                               'link'}).findAll('span')
+                    koefs = []
+                    koefs_row = game.findAll('td', {'class': 'odd-td'})
 
-                for koef in koefs_row:
-                    try:
-                        koef_val_raw = koef.find('a', {'class': 'button'}).text
-                        koef_val = koef_val_raw.strip('\n')
-                    # TODO which exception?
-                    except Exception:
-                        koef_val = '—'
+                    for koef in koefs_row:
+                        koef_val_raw = koef.find('a', {'class':
+                                                       'button'}).text
+                        koef_val = koef_val_raw.replace('\n', '')
+                        koefs.append(koef_val)
 
-                    koefs.append(koef_val)
+                    game_data = {
+                        'date': date,
+                        'owner': players[0].text[:-2],
+                        'guest': players[1].text,
+                        'koefs': koefs
+                    }
 
-                game_data = {
-                    'date': date,
-                    'owner': players[0].text[:-2],
-                    'guest': players[1].text,
-                    'koefs': koefs
-                }
-
-                yield game_data
+                    yield game_data
 
     def save(self, game_data: dict):
         with open(self.filename, 'a', encoding='utf-8') as file:
