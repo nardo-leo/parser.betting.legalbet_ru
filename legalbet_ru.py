@@ -72,7 +72,8 @@ class LegalBetParser:
                         koef_val_raw = koef.find('a', {'class':
                                                        'button'}).text
                         koef_val = koef_val_raw.replace('\n', '')
-                        koefs.append(koef_val)
+                        # ' is for Google Spreadsheets
+                        koefs.append(f"'{koef_val}")
 
                     game_data = {
                         'date': date,
