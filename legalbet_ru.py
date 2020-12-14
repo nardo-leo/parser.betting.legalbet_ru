@@ -34,7 +34,7 @@ class LegalBetParser:
         # check every sport raw
         for sport_type_raw in sport_type_raws:
             if sport_type_raw.find('div',
-                                   {'class': 'icon'}).text == sport_type:
+                                   attrs={'class': 'icon'}).text == sport_type:
                 games_table = sport_type_raw.findNext('table')
                 block_games = []
                 while True:
@@ -60,29 +60,32 @@ class LegalBetParser:
                                          'heading-3'}).text.split('\n')[0]
             block_games = self.find_sport_type(games_day, 'Футбол')
 
-            for games in block_games:
-                for game in games:
-                    players = game.find('a',
-                                        attrs={'class':
-                                               'link'}).findAll('span')
-                    koefs = []
-                    koefs_row = game.findAll('td', {'class': 'odd-td'})
+            try:
+                for games in block_games:
+                    for game in games:
+                        players = game.find('a',
+                                            attrs={'class':
+                                                   'link'}).findAll('span')
+                        koefs = []
+                        koefs_row = game.findAll('td', {'class': 'odd-td'})
 
-                    for koef in koefs_row:
-                        koef_val_raw = koef.find('a', {'class':
-                                                       'button'}).text
-                        koef_val = koef_val_raw.replace('\n', '')
-                        # ' is for Google Spreadsheets
-                        koefs.append(f"'{koef_val}")
+                        for koef in koefs_row:
+                            koef_val_raw = koef.find('a', {'class':
+                                                           'button'}).text
+                            koef_val = koef_val_raw.replace('\n', '')
+                            # ' is for Google Spreadsheets
+                            koefs.append(f"'{koef_val}")
 
-                    game_data = {
-                        'date': date,
-                        'owner': players[0].text[:-2],
-                        'guest': players[1].text,
-                        'koefs': koefs
-                    }
+                        game_data = {
+                            'date': date,
+                            'owner': players[0].text[:-2],
+                            'guest': players[1].text,
+                            'koefs': koefs
+                        }
 
-                    yield game_data
+                        yield game_data
+            except TypeError:
+                continue
 
     def save(self, game_data: dict):
         with open(self.filename, 'a', encoding='utf-8') as file:
